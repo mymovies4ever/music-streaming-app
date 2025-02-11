@@ -29,11 +29,27 @@
         }
         .song-list {
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .song-item {
+            width: 200px;
+            margin: 10px;
             padding: 10px;
-            border-bottom: 1px solid gray;
+            background: #1e1e1e;
+            border-radius: 5px;
             cursor: pointer;
+            text-align: center;
+        }
+        .song-item img {
+            width: 100%;
+            border-radius: 5px;
+        }
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -45,7 +61,7 @@
 
     <div class="song-list" id="songList"></div>
 
-    <audio id="audioPlayer" controls style="width: 100%; margin-top: 20px; display: none;"></audio>
+    <audio id="audioPlayer" controls></audio>
 
     <script>
         async function searchSongs() {
@@ -61,7 +77,11 @@
             data.results.forEach(song => {
                 const songItem = document.createElement("div");
                 songItem.className = "song-item";
-                songItem.innerHTML = `<strong>${song.title}</strong> - ${song.artist}`;
+                songItem.innerHTML = `
+                    <img src="${song.image}" alt="${song.title}">
+                    <p><strong>${song.title}</strong></p>
+                    <p>${song.artist}</p>
+                `;
                 songItem.onclick = () => playSong(song.audio_url);
                 songList.appendChild(songItem);
             });
