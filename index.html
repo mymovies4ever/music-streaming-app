@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Music Streaming</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@amplitudejs/amplitudejs@5.3.2/dist/amplitude.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/amplitudejs@5.3.2/dist/amplitude.css">
+    <script src="https://cdn.jsdelivr.net/npm/amplitudejs@5.3.2/dist/amplitude.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,28 +48,29 @@
             width: 100%;
             border-radius: 5px;
         }
-        .amplitude-player {
-            width: 100%;
+        .player-container {
             margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
 <body>
-
     <h1>My Music Streaming</h1>
     <input type="text" id="searchBox" placeholder="Search for songs...">
     <button onclick="searchSongs()">Search</button>
 
     <div class="song-list" id="songList"></div>
 
-    <div class="amplitude-player" id="player" style="display: none;">
-        <div data-amplitude-song-info="name"></div>
-        <div data-amplitude-song-info="artist"></div>
-        <progress class="amplitude-song-played-progress"></progress>
-        <div class="amplitude-play-pause" amplitude-main-play-pause="true"></div>
+    <div class="player-container" id="playerContainer">
+        <img id="nowPlayingImage" src="" alt="" style="width: 200px; border-radius: 5px;">
+        <p id="nowPlayingTitle"></p>
+        <p id="nowPlayingArtist"></p>
+        <p id="nowPlayingAlbum"></p>
+        <p id="nowPlayingYear"></p>
+        <button onclick="Amplitude.play()">Play</button>
+        <button onclick="Amplitude.pause()">Pause</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@amplitudejs/amplitudejs@5.3.2/dist/amplitude.js"></script>
     <script>
         async function searchSongs() {
             const query = document.getElementById("searchBox").value;
@@ -85,10 +87,22 @@
                     name: song.title,
                     artist: song.artist,
                     album: song.album,
+                    year: song.year,
                     url: song.audio_url,
                     cover_art_url: song.image
-                }));
+                })).filter(song => song.url); // Filter out songs without a valid audio URL
 
+                Amplitude.init({
+                    songs: songs,
+                    start_song: 0,
+                    callbacks: {
+                        play: function () {
+                            document.getElementById("playerContainer").style.display = "block";
+                        }
+                    }
+                });
+
+                songList.innerHTML = "";
                 songs.forEach((song, index) => {
                     const songItem = document.createElement("div");
                     songItem.className = "song-item";
@@ -106,14 +120,15 @@
         }
 
         function playSong(index, songs) {
-            Amplitude.init({
-                songs: songs,
-                start_song: index
-            });
-            document.getElementById("player").style.display = "block";
-            Amplitude.play();
+            Amplitude.playSongAtIndex(index);
+            const song = songs[index];
+            document.getElementById("nowPlayingImage").src = song.cover_art_url;
+            document.getElementById("nowPlayingTitle").textContent = `Title: ${song.name}`;
+            document.getElementById("nowPlayingArtist").textContent = `Artist: ${song.artist}`;
+            document.getElementById("nowPlayingAlbum").textContent = `Album: ${song.album}`;
+            document.getElementById("nowPlayingYear").textContent = `Year: ${song.year}`;
+            document.getElementById("playerContainer").style.display = "block";
         }
     </script>
-
 </body>
 </html>
