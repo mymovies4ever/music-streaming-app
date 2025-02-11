@@ -62,10 +62,17 @@
 
             try {
                 const response = await fetch(`https://jiosaavn-api.vercel.app/search?query=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
                 const data = await response.json();
+                if (!data || !data.data || !data.data.results) {
+                    throw new Error('Unexpected API response structure');
+                }
                 renderSongs(data.data.results);
             } catch (error) {
                 console.error("Error fetching search results:", error);
+                alert("An error occurred while fetching search results. Please try again later.");
             }
         }
 
@@ -89,7 +96,13 @@
         async function getPlayableUrl(songId) {
             try {
                 const response = await fetch(`https://jiosaavn-api.vercel.app/songs?id=${songId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
                 const data = await response.json();
+                if (!data || !data.data || !data.data[0] || !data.data[0].downloadUrl[4]) {
+                    throw new Error('Unexpected API response structure');
+                }
                 return data.data[0].downloadUrl[4].url || null;
             } catch (error) {
                 console.error("Error fetching playable URL:", error);
