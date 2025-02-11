@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Music Streaming</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@amplitudejs/amplitudejs@5.3.2/dist/amplitude.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -46,10 +47,9 @@
             width: 100%;
             border-radius: 5px;
         }
-        audio {
+        .amplitude-player {
             width: 100%;
             margin-top: 20px;
-            display: none;
         }
     </style>
 </head>
@@ -61,15 +61,14 @@
 
     <div class="song-list" id="songList"></div>
 
-    <audio id="audioPlayer" controls></audio>
-    <div id="nowPlaying" style="display: none; margin-top: 20px;">
-        <img id="nowPlayingImage" src="" alt="" style="width: 200px; border-radius: 5px;">
-        <p id="nowPlayingTitle"></p>
-        <p id="nowPlayingArtist"></p>
-        <p id="nowPlayingAlbum"></p>
-        <p id="nowPlayingYear"></p>
+    <div class="amplitude-player" id="player" style="display: none;">
+        <div data-amplitude-song-info="name"></div>
+        <div data-amplitude-song-info="artist"></div>
+        <progress class="amplitude-song-played-progress"></progress>
+        <div class="amplitude-play-pause" amplitude-main-play-pause="true"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@amplitudejs/amplitudejs@5.3.2/dist/amplitude.js"></script>
     <script>
         async function searchSongs() {
             const query = document.getElementById("searchBox").value;
@@ -82,17 +81,23 @@
                 const songList = document.getElementById("songList");
                 songList.innerHTML = "";
 
-                data.results.forEach(song => {
+                const songs = data.results.map(song => ({
+                    name: song.title,
+                    artist: song.artist,
+                    album: song.album,
+                    url: song.audio_url,
+                    cover_art_url: song.image
+                }));
+
+                songs.forEach((song, index) => {
                     const songItem = document.createElement("div");
                     songItem.className = "song-item";
                     songItem.innerHTML = `
-                        <img src="${song.image}" alt="${song.title}">
-                        <p><strong>${song.title}</strong></p>
-                        <p>Artist: ${song.artist}</p>
-                        <p>Album: ${song.album}</p>
-                        <p>Year: ${song.year}</p>
+                        <img src="${song.cover_art_url}" alt="${song.name}">
+                        <p><strong>${song.name}</strong></p>
+                        <p>${song.artist}</p>
                     `;
-                    songItem.onclick = () => playSong(song);
+                    songItem.onclick = () => playSong(index, songs);
                     songList.appendChild(songItem);
                 });
             } catch (error) {
@@ -100,18 +105,13 @@
             }
         }
 
-        function playSong(song) {
-            const audioPlayer = document.getElementById("audioPlayer");
-            audioPlayer.src = song.audio_url;
-            audioPlayer.style.display = "block";
-            audioPlayer.play().catch(error => console.error("Playback error:", error));
-
-            document.getElementById("nowPlaying").style.display = "block";
-            document.getElementById("nowPlayingImage").src = song.image;
-            document.getElementById("nowPlayingTitle").textContent = `Title: ${song.title}`;
-            document.getElementById("nowPlayingArtist").textContent = `Artist: ${song.artist}`;
-            document.getElementById("nowPlayingAlbum").textContent = `Album: ${song.album}`;
-            document.getElementById("nowPlayingYear").textContent = `Year: ${song.year}`;
+        function playSong(index, songs) {
+            Amplitude.init({
+                songs: songs,
+                start_song: index
+            });
+            document.getElementById("player").style.display = "block";
+            Amplitude.play();
         }
     </script>
 
